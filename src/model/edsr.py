@@ -53,6 +53,7 @@ class EDSR(nn.Module):
         self.tail = nn.Sequential(*m_tail)
 
     def forward(self, x):
+        #x = x.permute(0,3,1,2) #형태가 다를 때 넣어서 transpose를 시켜준다.
         x = self.sub_mean(x)
         x = self.head(x)
 

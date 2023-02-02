@@ -6,22 +6,22 @@ import skimage.color as sc
 import torch
 
 def get_patch(*args, patch_size=96, scale=2, multi=False, input_large=False):
-    ih, iw = args[0].shape[:2]
+    ih, iw = args[0].shape[:2] #args????
 
     if not input_large:
         p = scale if multi else 1
         tp = p * patch_size
         ip = tp // scale
-    else:
-        tp = patch_size
+    else: #실행
+        tp = patch_size # =96
         ip = patch_size
 
-    ix = random.randrange(0, iw - ip + 1)
-    iy = random.randrange(0, ih - ip + 1)
+    ix = random.randrange(0, iw - ip + 1) #random하게 설정
+    iy = random.randrange(0, ih - ip + 1) 
 
     if not input_large:
         tx, ty = scale * ix, scale * iy
-    else:
+    else: #실행
         tx, ty = ix, iy
 
     ret = [
@@ -29,11 +29,11 @@ def get_patch(*args, patch_size=96, scale=2, multi=False, input_large=False):
         *[a[ty:ty + tp, tx:tx + tp, :] for a in args[1:]]
     ]
 
-    return ret
+    return ret 
 
 def set_channel(*args, n_channels=3):
     def _set_channel(img):
-        if img.ndim == 2:
+        if img.ndim == 2: #흑백, 2차원일 때
             img = np.expand_dims(img, axis=2)
 
         c = img.shape[2]
@@ -57,11 +57,11 @@ def np2Tensor(*args, rgb_range=255):
     return [_np2Tensor(a) for a in args]
 
 def augment(*args, hflip=True, rot=True):
-    hflip = hflip and random.random() < 0.5
-    vflip = rot and random.random() < 0.5
-    rot90 = rot and random.random() < 0.5
+    hflip = hflip and random.random() < 0.5 #horizontal, randomly (p = 0.5)
+    vflip = rot and random.random() < 0.5 #vertical, randomly (p = 0.5)
+    rot90 = rot and random.random() < 0.5 #rotation, randomly (p = 0.5)
 
-    def _augment(img):
+    def _augment(img): #모두 True이므로 실행
         if hflip: img = img[:, ::-1, :]
         if vflip: img = img[::-1, :, :]
         if rot90: img = img.transpose(1, 0, 2)

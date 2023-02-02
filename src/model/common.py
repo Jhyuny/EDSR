@@ -17,7 +17,7 @@ class MeanShift(nn.Conv2d):
         super(MeanShift, self).__init__(3, 3, kernel_size=1)
         std = torch.Tensor(rgb_std)
         self.weight.data = torch.eye(3).view(3, 3, 1, 1) / std.view(3, 1, 1, 1)
-        self.bias.data = sign * rgb_range * torch.Tensor(rgb_mean) / std
+        self.bias.data = sign * rgb_range * torch.Tensor(rgb_mean) / std #bias계산 
         for p in self.parameters():
             p.requires_grad = False
 
@@ -41,15 +41,16 @@ class ResBlock(nn.Module):
 
         super(ResBlock, self).__init__()
         m = []
-        for i in range(2):
+        for i in range(2): # i=0, i=1
             m.append(conv(n_feats, n_feats, kernel_size, bias=bias))
-            if bn:
+            if bn:#False
                 m.append(nn.BatchNorm2d(n_feats))
             if i == 0:
                 m.append(act)
+                #m = [conv,act,conv]
 
         self.body = nn.Sequential(*m)
-        self.res_scale = res_scale
+        self.res_scale = res_scale #res_scale = 1
 
     def forward(self, x):
         res = self.body(x).mul(self.res_scale)

@@ -11,42 +11,42 @@ class Model(nn.Module):
         super(Model, self).__init__()
         print('Making model...')
 
-        self.scale = args.scale
+        self.scale = args.scale #4
         self.idx_scale = 0
         self.input_large = (args.model == 'VDSR')
-        self.self_ensemble = args.self_ensemble
-        self.chop = args.chop
-        self.precision = args.precision
-        self.cpu = args.cpu
+        self.self_ensemble = args.self_ensemble #False
+        self.chop = args.chop #False
+        self.precision = args.precision #'single'
+        self.cpu = args.cpu #False
         if self.cpu:
             self.device = torch.device('cpu')
         else:
             if torch.backends.mps.is_available():
                 self.device = torch.device('mps')
             elif torch.cuda.is_available():
-                self.device = torch.device('cuda')
+                self.device = torch.device('cuda') #gpu사용
             else:
                 self.device = torch.device('cpu')
 
-        self.n_GPUs = args.n_GPUs
-        self.save_models = args.save_models
+        self.n_GPUs = args.n_GPUs #1
+        self.save_models = args.save_models #False
 
-        module = import_module('model.' + args.model.lower())
+        module = import_module('model.' + args.model.lower()) #import_module(model.edsr.py) <model/edsr.py>
         self.model = module.make_model(args).to(self.device)
         if args.precision == 'half':
             self.model.half()
 
         self.load(
             ckp.get_path('model'),
-            pre_train=args.pre_train,
-            resume=args.resume,
+            pre_train=args.pre_train, #pre_train = ''
+            resume=args.resume, #0(int)
             cpu=args.cpu
         )
         print(self.model, file=ckp.log_file)
 
     def forward(self, x, idx_scale):
         self.idx_scale = idx_scale
-        if hasattr(self.model, 'set_scale'):
+        if hasattr(self.model, 'set_scale'): #object의 속성 확인 (slef.model에 'set_sclae'이 존재하는가)
             self.model.set_scale(idx_scale)
 
         if self.training:
@@ -66,10 +66,10 @@ class Model(nn.Module):
                 return forward_function(x)
 
     def save(self, apath, epoch, is_best=False):
-        save_dirs = [os.path.join(apath, 'model_latest.pt')]
+        save_dirs = [os.path.join(apath, 'model_latest.pt')] #model_latest.pt저장
 
         if is_best:
-            save_dirs.append(os.path.join(apath, 'model_best.pt'))
+            save_dirs.append(os.path.join(apath, 'model_best.pt')) #best인경우는 얘도 저장
         if self.save_models:
             save_dirs.append(
                 os.path.join(apath, 'model_{}.pt'.format(epoch))
@@ -86,12 +86,12 @@ class Model(nn.Module):
         else:
             kwargs = {'map_location': self.device}
 
-        if resume == -1:
+        if resume == -1: #실행(model을 가져옴)
             load_from = torch.load(
-                os.path.join(apath, 'model_latest.pt'),
+                os.path.join(apath, 'model_latest.pt'),#가장 최근 모델
                 **kwargs
             )
-        elif resume == 0:
+        elif resume == 0: #model을 다운로드
             if pre_train == 'download':
                 print('Download the model')
                 dir_model = os.path.join('..', 'models')
@@ -115,25 +115,25 @@ class Model(nn.Module):
 
     def forward_chop(self, *args, shave=10, min_size=160000):
         scale = 1 if self.input_large else self.scale[self.idx_scale]
-        n_GPUs = min(self.n_GPUs, 4)
+        n_GPUs = min(self.n_GPUs, 4) # = 1
         # height, width
         h, w = args[0].size()[-2:]
 
-        top = slice(0, h//2 + shave)
+        top = slice(0, h//2 + shave) #index정의
         bottom = slice(h - h//2 - shave, h)
         left = slice(0, w//2 + shave)
         right = slice(w - w//2 - shave, w)
-        x_chops = [torch.cat([
+        x_chops = [torch.cat([ #Tensor합치기
             a[..., top, left],
             a[..., top, right],
             a[..., bottom, left],
             a[..., bottom, right]
-        ]) for a in args]
+        ]) for a in args] #args가 뭐지..????
 
         y_chops = []
-        if h * w < 4 * min_size:
-            for i in range(0, 4, n_GPUs):
-                x = [x_chop[i:(i + n_GPUs)] for x_chop in x_chops]
+        if h * w < 4 * min_size: #640000보다 작으면
+            for i in range(0, 4, n_GPUs): # i= 0,1,2,3
+                x = [x_chop[i:(i + n_GPUs)] for x_chop in x_chops]#[0:1, 1:2, 2:3, 3:4]
                 y = P.data_parallel(self.model, *x, range(n_GPUs))
                 if not isinstance(y, list): y = [y]
                 if not y_chops:
@@ -173,7 +173,7 @@ class Model(nn.Module):
         return y
 
     def forward_x8(self, *args, forward_function=None):
-        def _transform(v, op):
+        def _transform(v, op):#v에 대한 transform진행 
             if self.precision != 'single': v = v.float()
 
             v2np = v.data.cpu().numpy()
@@ -184,7 +184,7 @@ class Model(nn.Module):
             elif op == 't':
                 tfnp = v2np.transpose((0, 1, 3, 2)).copy()
 
-            ret = torch.Tensor(tfnp).to(self.device)
+            ret = torch.Tensor(tfnp).to(self.device) #tensor to self.device, self.device = 'cuda'...?
             if self.precision == 'half': ret = ret.half()
 
             return ret
@@ -192,13 +192,13 @@ class Model(nn.Module):
         list_x = []
         for a in args:
             x = [a]
-            for tf in 'v', 'h', 't': x.extend([_transform(_x, tf) for _x in x])
+            for tf in 'v', 'h', 't': x.extend([_transform(_x, tf) for _x in x]) #_transform을 모두 list_x에 추가
 
             list_x.append(x)
 
         list_y = []
         for x in zip(*list_x):
-            y = forward_function(*x)
+            y = forward_function(*x) #list_x의 요소를 forward_function에 넣은 값이 y
             if not isinstance(y, list): y = [y]
             if not list_y:
                 list_y = [[_y] for _y in y]
@@ -207,11 +207,11 @@ class Model(nn.Module):
 
         for _list_y in list_y:
             for i in range(len(_list_y)):
-                if i > 3:
+                if i > 3: #4,5,6,7,8..
                     _list_y[i] = _transform(_list_y[i], 't')
-                if i % 4 > 1:
+                if i % 4 > 1: #6,7,10,11,14,15...
                     _list_y[i] = _transform(_list_y[i], 'h')
-                if (i % 4) % 2 == 1:
+                if (i % 4) % 2 == 1: #7,11,15...
                     _list_y[i] = _transform(_list_y[i], 'v')
 
         y = [torch.cat(_y, dim=0).mean(dim=0, keepdim=True) for _y in list_y]

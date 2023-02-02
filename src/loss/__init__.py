@@ -16,14 +16,14 @@ class Loss(nn.modules.loss._Loss):
         super(Loss, self).__init__()
         print('Preparing loss function:')
 
-        self.n_GPUs = args.n_GPUs
-        self.loss = []
+        self.n_GPUs = args.n_GPUs #1
+        self.loss = [] #list정의
         self.loss_module = nn.ModuleList()
-        for loss in args.loss.split('+'):
-            weight, loss_type = loss.split('*')
+        for loss in args.loss.split('+'):#args.loss = 1*L1
+            weight, loss_type = loss.split('*') #weight = 1, loss_type = L1
             if loss_type == 'MSE':
                 loss_function = nn.MSELoss()
-            elif loss_type == 'L1':
+            elif loss_type == 'L1': #실행
                 loss_function = nn.L1Loss()
             elif loss_type.find('VGG') >= 0:
                 module = import_module('loss.vgg')
@@ -39,14 +39,14 @@ class Loss(nn.modules.loss._Loss):
                 )
 
             self.loss.append({
-                'type': loss_type,
-                'weight': float(weight),
-                'function': loss_function}
+                'type': loss_type, #L1
+                'weight': float(weight), #1.0
+                'function': loss_function} #nn.L1Loss()
             )
             if loss_type.find('GAN') >= 0:
                 self.loss.append({'type': 'DIS', 'weight': 1, 'function': None})
 
-        if len(self.loss) > 1:
+        if len(self.loss) > 1: #len(self.loss) = 3이므로 실행
             self.loss.append({'type': 'Total', 'weight': 0, 'function': None})
 
         for l in self.loss:
@@ -56,15 +56,15 @@ class Loss(nn.modules.loss._Loss):
 
         self.log = torch.Tensor()
 
-        device = torch.device('cpu' if args.cpu else 'cuda')
+        device = torch.device('cpu' if args.cpu else 'cuda') #cuda
         self.loss_module.to(device)
-        if args.precision == 'half': self.loss_module.half()
-        if not args.cpu and args.n_GPUs > 1:
+        if args.precision == 'half': self.loss_module.half() #args.precision == 'single
+        if not args.cpu and args.n_GPUs > 1: #args.n_GPUs = 1 실행x
             self.loss_module = nn.DataParallel(
                 self.loss_module, range(args.n_GPUs)
             )
 
-        if args.load != '': self.load(ckp.dir, cpu=args.cpu)
+        if args.load != '': self.load(ckp.dir, cpu=args.cpu) #args.load == ''
 
     def forward(self, sr, hr):
         losses = []

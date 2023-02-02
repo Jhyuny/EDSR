@@ -48,7 +48,7 @@ def bg_target(queue):
             if filename is None: break
             imageio.imwrite(filename, tensor.numpy())
 
-class checkpoint():
+class checkpoint(): #model의 if문의 조건으로 사용.
     def __init__(self, args):
         self.args = args
         self.ok = True

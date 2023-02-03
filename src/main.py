@@ -23,8 +23,8 @@ def main(): #training을 위한 main.py실행
             _model = model.Model(args, checkpoint) #model의 __init__의 Model에서 load <model/__init__.py>
             _loss = loss.Loss(args, checkpoint) if not args.test_only else None #loss의 __init__의 Loss에서 load <loss/__init.py>
             #args.test_only = False, not False = True이므로 loss.Loss실행
-            t = Trainer(args, loader, _model, _loss, checkpoint)
-            while not t.terminate():
+            t = Trainer(args, loader, _model, _loss, checkpoint) #<trainer.py>의 Trainer
+            while not t.terminate(): #model.train() : train을 실행, False라면 model.test()와 같이 test진행
                 t.train()
                 t.test()
 

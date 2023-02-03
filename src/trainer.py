@@ -20,13 +20,13 @@ class Trainer():
         self.loss = my_loss
         self.optimizer = utility.make_optimizer(args, self.model)
 
-        if self.args.load != '':
+        if self.args.load != '': #args.load = ''
             self.optimizer.load(ckp.dir, epoch=len(ckp.log))
 
         self.error_last = 1e8
 
     def train(self):
-        self.loss.step()
+        self.loss.step() 
         epoch = self.optimizer.get_last_epoch() + 1
         lr = self.optimizer.get_lr()
 
@@ -39,14 +39,14 @@ class Trainer():
         timer_data, timer_model = utility.timer(), utility.timer()
         # TEMP
         self.loader_train.dataset.set_scale(0)
-        for batch, (lr, hr, _,) in enumerate(self.loader_train):
+        for batch, (lr, hr, _,) in enumerate(self.loader_train): #dataloader하면서 불러온다. batch_size 16개씩.
             lr, hr = self.prepare(lr, hr)
             timer_data.hold()
             timer_model.tic()
 
             self.optimizer.zero_grad()
-            sr = self.model(lr, 0)
-            loss = self.loss(sr, hr)
+            sr = self.model(lr, 0) #sr : prediction 
+            loss = self.loss(sr, hr) #loss계산
             loss.backward()
             if self.args.gclip > 0:
                 utils.clip_grad_value_(
@@ -128,7 +128,7 @@ class Trainer():
 
         torch.set_grad_enabled(True)
 
-    def prepare(self, *args):
+    def prepare(self, *args): #cuda > gpu사용으로 설정
         if self.args.cpu:
             device = torch.device('cpu')
         else:

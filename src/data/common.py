@@ -6,6 +6,8 @@ import skimage.color as sc
 import torch
 
 def get_patch(*args, patch_size=96, scale=2, multi=False, input_large=False):
+    #lr,hr image의 같은 부분을 비교하고 싶으므로, randomcrop()을 사용 불가
+    #(randomcrop()은 random하게 뽑으므로 같은 부분을 비교할 수 없음)
     ih, iw = args[0].shape[:2] #args????
 
     if not input_large:
@@ -48,7 +50,7 @@ def set_channel(*args, n_channels=3):
 
 def np2Tensor(*args, rgb_range=255):
     def _np2Tensor(img):
-        np_transpose = np.ascontiguousarray(img.transpose((2, 0, 1)))
+        np_transpose = np.ascontiguousarray(img.transpose((2, 0, 1))) #pytorch에서의 형식이 다르므로 수정
         tensor = torch.from_numpy(np_transpose).float()
         tensor.mul_(rgb_range / 255)
 
@@ -56,7 +58,7 @@ def np2Tensor(*args, rgb_range=255):
 
     return [_np2Tensor(a) for a in args]
 
-def augment(*args, hflip=True, rot=True):
+def augment(*args, hflip=True, rot=True): #pytorch library사용 안하고, 마찬가지로 같은 augmentation을 취하기 위해
     hflip = hflip and random.random() < 0.5 #horizontal, randomly (p = 0.5)
     vflip = rot and random.random() < 0.5 #vertical, randomly (p = 0.5)
     rot90 = rot and random.random() < 0.5 #rotation, randomly (p = 0.5)

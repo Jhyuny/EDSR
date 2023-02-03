@@ -128,7 +128,7 @@ class Model(nn.Module):
             a[..., top, right],
             a[..., bottom, left],
             a[..., bottom, right]
-        ]) for a in args] #args가 뭐지..????
+        ]) for a in args] #args가 merge..^^^^^^^^
 
         y_chops = []
         if h * w < 4 * min_size: #640000보다 작으면
@@ -184,7 +184,7 @@ class Model(nn.Module):
             elif op == 't':
                 tfnp = v2np.transpose((0, 1, 3, 2)).copy()
 
-            ret = torch.Tensor(tfnp).to(self.device) #tensor to self.device, self.device = 'cuda'...?
+            ret = torch.Tensor(tfnp).to(self.device) #tensor to self.device, self.device = 'cuda'... , Returns a copy of this object in CUDA memory.
             if self.precision == 'half': ret = ret.half()
 
             return ret

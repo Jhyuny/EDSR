@@ -22,7 +22,7 @@ class Data: #model loader = data.Data(args)
             datasets = [] #list 정의
             for d in args.data_train: #data_train = 'DIV2K', args.data_train = args.data_train.split('+')
                 module_name = d if d.find('DIV2K-Q') < 0 else 'DIV2KJPEG' #modul_name은 d이다. find('DIV2K-Q')를 찾으면 해당 위치index or -1을 반환 
-                #DIV2K-Q가 뭐지??? 하여튼 포함 안하므로 module_name = d = DIV2K
+                #DIV2K-Q 포함 안하므로 module_name = d = DIV2K
                 m = import_module('data.' + module_name.lower()) # m = 'data.div2k', import_module(data.div2k) module data.div2k를 import함 <data.div2k.py>
                 datasets.append(getattr(m, module_name)(args, name=d)) 
 
@@ -50,6 +50,6 @@ class Data: #model loader = data.Data(args)
                     batch_size=1,
                     shuffle=False,
                     pin_memory=not args.cpu,
-                    num_workers=args.n_threads,
+                    num_workers=args.n_threads, #args.n_threads=6, 일반적으로 gpu개수의 2~3배
                 )
             )

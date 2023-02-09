@@ -10,25 +10,25 @@ def get_patch(*args, patch_size=96, scale=2, multi=False, input_large=False):
     #(randomcrop()은 random하게 뽑으므로 같은 부분을 비교할 수 없음)
     ih, iw = args[0].shape[:2] #args????
 
-    if not input_large:
-        p = scale if multi else 1
-        tp = p * patch_size
-        ip = tp // scale
-    else: #실행
+    if not input_large: #True 실행
+        p = scale if multi else 1 #p = 1
+        tp = p * patch_size #96
+        ip = tp // scale #48
+    else: 
         tp = patch_size # =96
         ip = patch_size
 
     ix = random.randrange(0, iw - ip + 1) #random하게 설정
     iy = random.randrange(0, ih - ip + 1) 
 
-    if not input_large:
+    if not input_large: #True 실행
         tx, ty = scale * ix, scale * iy
-    else: #실행
+    else: 
         tx, ty = ix, iy
 
     ret = [
-        args[0][iy:iy + ip, ix:ix + ip, :],
-        *[a[ty:ty + tp, tx:tx + tp, :] for a in args[1:]]
+        args[0][iy:iy + ip, ix:ix + ip ],
+        *[a[ty:ty + tp, tx:tx + tp ] for a in args[1:]]
     ]
 
     return ret 
@@ -51,7 +51,7 @@ def set_channel(*args, n_channels=3):
 def np2Tensor(*args, rgb_range=255):
     def _np2Tensor(img):
         np_transpose = np.ascontiguousarray(img.transpose((2, 0, 1))) #pytorch에서의 형식이 다르므로 수정
-        tensor = torch.from_numpy(np_transpose).float()
+        tensor = torch.from_numpy(np_transpose.copy()).float()
         tensor.mul_(rgb_range / 255)
 
         return tensor
@@ -61,12 +61,12 @@ def np2Tensor(*args, rgb_range=255):
 def augment(*args, hflip=True, rot=True): #pytorch library사용 안하고, 마찬가지로 같은 augmentation을 취하기 위해
     hflip = hflip and random.random() < 0.5 #horizontal, randomly (p = 0.5)
     vflip = rot and random.random() < 0.5 #vertical, randomly (p = 0.5)
-    rot90 = rot and random.random() < 0.5 #rotation, randomly (p = 0.5)
+    #rot90 = rot and random.random() < 0.5 #rotation, randomly (p = 0.5)
 
     def _augment(img): #모두 True이므로 실행
-        if hflip: img = img[:, ::-1, :]
-        if vflip: img = img[::-1, :, :]
-        if rot90: img = img.transpose(1, 0, 2)
+        if hflip: img = img[:, ::-1 ]
+        if vflip: img = img[::-1, : ]
+        #if rot90: img = img.transpose(1, 0, 2)
         
         return img
 

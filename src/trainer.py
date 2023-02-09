@@ -39,7 +39,7 @@ class Trainer():
         timer_data, timer_model = utility.timer(), utility.timer()
         # TEMP
         self.loader_train.dataset.set_scale(0)
-        for batch, (lr, hr, _,) in enumerate(self.loader_train): #dataloader하면서 불러온다. batch_size 16개씩.
+        for batch, (lr, hr, _,) in enumerate(self.loader_train): #dataloader하면서 불러온다. batch_size 16
             lr, hr = self.prepare(lr, hr)
             timer_data.hold()
             timer_model.tic()

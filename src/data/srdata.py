@@ -21,6 +21,8 @@ class SRData(data.Dataset):
         self.input_large = (args.model == 'VDSR')
         self.scale = args.scale #args.scale = 4
         self.idx_scale = 0
+        self.full_path = args.full_1mm
+        self.quarter_path = args.quarter_1mm
         
         self._set_filesystem(args.dir_data) #args.dir_data = dataset이 있는 경로
         if args.ext.find('img') < 0: #args.ext = 'sep' 이므로 if 조건문은 True: 실행
@@ -70,37 +72,39 @@ class SRData(data.Dataset):
         names_hr = sorted( #낮은 순서대로 정렬
             glob.glob(os.path.join(self.dir_hr, '*' + self.ext[0])) #self.ext = ('.png', '.png') 로 _set_filesystem에 정의
         )#self.dir_hr/*.png / glob()이므로 '.png'를 포함하는 파일을 search
-        names_lr = [[] for _ in self.scale] #names_lr = [[]]..?
+        names_lr = [[] for _ in self.scale]
         for f in names_hr:
             filename, _ = os.path.splitext(os.path.basename(f))
+            filename = filename.replace('full','quarter')
             for si, s in enumerate(self.scale):
                 names_lr[si].append(os.path.join(
-                    self.dir_lr, 'X{}/{}x{}{}'.format(
-                        s, filename, s, self.ext[1]
-                    )#names_lr의 si번째 index에 dir_data/LR_bicubic/X(scale)/(filename)x(scale)(.png)로 대입
+                    self.dir_lr, '{}{}'.format(
+                         filename, self.ext[1]
+                    )
                 ))
 
         return names_hr, names_lr #lr,hr image 각각의 path를 list에 정리
 
     def _set_filesystem(self, dir_data):
         self.apath = os.path.join(dir_data, self.name)  #self.apath = dir_data + '' = dir_data
-        self.dir_hr = os.path.join(self.apath, 'HR') #dir_data/HR
-        self.dir_lr = os.path.join(self.apath, 'LR_bicubic') #dir_data/LR_bicubic
+        self.dir_hr = os.path.join(self.apath, self.full_path) #dir_data/HR
+        self.dir_lr = os.path.join(self.apath, self.quarter_path) #dir_data/LR_bicubic
         if self.input_large: self.dir_lr += 'L'
-        self.ext = ('.png', '.png')
+        self.ext = ('.tiff', '.tiff')
 
     def _check_and_load(self, ext, img, f, verbose=True): #self._check_and_load(args.ext, h, b, verbose=True)
         if not os.path.isfile(f) or ext.find('reset') >= 0:
             if verbose: #실행
                 print('Making a binary: {}'.format(f)) #f = b, b는 .pt파일 경로
-            with open(f, 'wb') as _f:
+            with open(f, 'wb') as _f: #file저장
                 pickle.dump(imageio.imread(img), _f) #pickle .txt이외의 자료형을 파일로 저장할 때 사용하는 모듈
                 #picke.dump(data,file) 형식으로 사용
 
     def __getitem__(self, idx):
         lr, hr, filename = self._load_file(idx) # line 120, memory에 올라온 직접적인 영상, image가 저장
+        lr, hr = common.set_channel(lr,hr, n_channels=self.args.n_colors)
         pair = self.get_patch(lr, hr) #get_patch : 
-        pair = common.set_channel(*pair, n_channels=self.args.n_colors) #n_channels=self.args.n_colors = 3
+        #pair = common.set_channel(*pair, n_channels=self.args.n_colors) #n_channels=self.args.n_colors = 3
         pair_t = common.np2Tensor(*pair, rgb_range=self.args.rgb_range) #rgb_range=self.args.rgb_range = 255
 
         return pair_t[0], pair_t[1], filename

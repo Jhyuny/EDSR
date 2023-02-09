@@ -1,5 +1,6 @@
 # EDSR baseline model (x2) + JPEG augmentation
 python main.py --model EDSR --scale 2 --patch_size 96 --save edsr_baseline_x2 --reset
+#python main.py --model EDSR --scale 2 --patch_size 96 --save edsr_baseline_x2 --reset --full_1mm full_1mm/L109 --quarter_1mm quarter_1mm/L109
 #python main.py --model EDSR --scale 2 --patch_size 96 --save edsr_baseline_x2 --reset --data_train DIV2K+DIV2K-Q75 --data_test DIV2K+DIV2K-Q75
 
 # EDSR baseline model (x3) - from EDSR baseline model (x2)

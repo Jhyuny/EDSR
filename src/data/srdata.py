@@ -38,14 +38,14 @@ class SRData(data.Dataset):
                 self.dir_hr.replace(self.apath, path_bin),
                 exist_ok=True #해당 directory가 이미 있을 경우 에러 발생 없이 넘어가고, 없을 경우에만 생성한다.
             )
-            for s in self.scale: #self.scale = '4' ????
-                os.makedirs(
-                    os.path.join(
-                        self.dir_lr.replace(self.apath, path_bin),
-                        'X{}'.format(s)
-                    ),
-                    exist_ok=True #해당 directory가 이미 있을 경우 에러 발생 없이 넘어가고, 없을 경우에만 생성한다.
-                )
+            #for s in self.scale: #self.scale = '4' ????
+            #    os.makedirs(
+            #        os.path.join(
+            #            self.dir_lr.replace(self.apath, path_bin),
+            #            'X{}'.format(s)
+            #        ),
+            #       exist_ok=True #해당 directory가 이미 있을 경우 에러 발생 없이 넘어가고, 없을 경우에만 생성한다.
+            #    )
             
             self.images_hr, self.images_lr = [], [[] for _ in self.scale]#scale에 따라서 iteration, x2,x3,x4의 sacle을 한 번에 path를 지정해주기 위해 lr은 list 원소를 list로 사용
             for h in list_hr:
